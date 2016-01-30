@@ -63,9 +63,12 @@ namespace BASEIMPLEMENTATION
 
     #include "doublylinkedlist.c"
     #include "base64.c"
+    /*because Map_ToJSON uses STRING_HANDLE to build its string, it cannot appear after "strings.c" because if it did, there'd be 2 STRING_delete available to the 
+    code of Map_ToSJON: the one in BASEIMPLEMENTATION namespace and the one that is global, and is the mock inside this file*/
+    #include "map.c"    
     #include "strings.c"
     #include "buffer.c"
-    #include "map.c"
+    
 };
 
 static MICROMOCK_MUTEX_HANDLE g_testByTest;
