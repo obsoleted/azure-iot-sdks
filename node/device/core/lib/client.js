@@ -4,7 +4,6 @@
 'use strict';
 
 var anHourFromNow = require('azure-iot-common').anHourFromNow;
-var ArgumentError = require('azure-iot-common').errors.ArgumentError;
 var ConnectionString = require('./connection_string.js');
 var SharedAccessSignature = require('./shared_access_signature.js');
 
@@ -55,17 +54,23 @@ Client.fromConnectionString = function fromConnectionString(value, Transport) {
 };
 
 /**
- * @method            module:azure-iot-device.Client.connect
+ * @method            module:azure-iot-device.Client#open
  * @description       Call the transport layer CONNECT function if the
  *                    transport layer implements it
+ * 
+ * @param {Function} done       The callback to be invoked when `sendEvent`
+ *                              completes execution.
  * @returns calls the given callback
  */
 Client.prototype.open = function (done) {
   /* Codes_SRS_NODE_DEVICE_CLIENT_12_001: [The open function shall call the transport’s connect function, if it exists.] */
   if (typeof this._transport.connect === 'function') {
-    this._transport.connect(function () {
-      done();
+    this._transport.connect(function (err, res) {
+      done(err, res);
     });
+  } else {
+      // No connect method on the transport.
+      done();
   } 
 };
 
@@ -77,9 +82,11 @@ response - a transport-specific response object]*/
 
 
 /**
- * The [sendEvent]{@linkcode Client#sendEvent} method sends an event message
- * to the IoT Hub as the device indicated by the connection string passed
- * via the constructor.
+ * @method            module:azure-iot-device.Client#sendEvent
+ * @description       The [sendEvent]{@linkcode Client#sendEvent} method sends an event message
+ *                    to the IoT Hub as the device indicated by the connection string passed
+ *                    via the constructor.
+ * 
  * @param {Message}  message    The [message]{@linkcode module:common/message.Message}
  *                              to be sent.
  * @param {Function} done       The callback to be invoked when `sendEvent`
@@ -92,9 +99,11 @@ Client.prototype.sendEvent = function(message, done) {
 };
 
 /**
- * The [sendEventBatch]{@linkcode Client#sendEventBatch} method sends a list
- * of event messages to the IoT Hub as the device indicated by the connection
- * string passed via the constructor.
+ * @method            module:azure-iot-device.Client#sendEventBatch
+ * @description       The [sendEventBatch]{@linkcode Client#sendEventBatch} method sends a list
+ *                    of event messages to the IoT Hub as the device indicated by the connection
+ *                    string passed via the constructor.
+ * 
  * @param {array<Message>} messages Array of [Message]{@linkcode module:common/message.Message}
  *                                  objects to be sent as a batch.
  * @param {Function}      done      The callback to be invoked when
@@ -106,22 +115,9 @@ Client.prototype.sendEventBatch = function(messages, done) {
 };
 
 /**
- * The receive method queries the IoT Hub (as the device indicated in the
- * constructor argument) for the next message in the queue.
- * @param {Function}  done      The callback to be invoked when `receive`
- *                              completes execution.
- */
-Client.prototype.receive = function(done) {
-  /*Codes_SRS_NODE_DEVICE_CLIENT_05_009: [The receive method shall query the IoT Hub for the next message via the transport associated with the Client instance.]*/
-  /*Codes_SRS_NODE_DEVICE_CLIENT_05_018: [When receive completes successfully, the callback function (indicated by the done argument) shall be invoked with the following arguments:
-  err - null
-  message - the received Message (for receive), otherwise null
-  response - a transport-specific response object]*/
-  this._transport.receive(done);
-};
-
-/**
- * The getReceiver method returns the receiver object that is used to get messages and settle them.
+ * @method            module:azure-iot-device.Client#getReceiver
+ * @description       The [getReceiver]{@linkcode Client#getReceiver} method returns the receiver object that is used to get messages and settle them.
+ * 
  * @param {Function} done The callback to be invoked with the receiver object as a parameter.
  */
 Client.prototype.getReceiver = function (done) {
@@ -129,66 +125,15 @@ Client.prototype.getReceiver = function (done) {
 };
 
 /**
- * The `abandon` method directs the IoT Hub to re-enqueue a message
- * message so it may be received again later.
- * @param {Message}   message   The [message]{@linkcode module:common/message.Message}
- *                              to be re-enqueued.
- * @param {Function}  done      The callback to be invoked when `abandon`
- *                              completes execution.
+ * The `close` method directs the transport to close the current connection to the IoT Hub instance
+ * 
+ * @param {Function}    done    The callback to be invoked when the connection has been closed.
  */
-Client.prototype.abandon = function(message, done) {
-  /*Codes_SRS_NODE_DEVICE_CLIENT_05_010: [If message has a lockToken property, the abandon method shall abandon message via the transport associated with the Client instance.]*/
-  /*Codes_SRS_NODE_DEVICE_CLIENT_05_011: [Otherwise it shall invoke the done callback with ArgumentError.]*/
-  message = message || {};
-
-  if (!message.lockToken) {
-    done(new ArgumentError('invalid lockToken'));
-  }
-  else {
-    this._transport.sendFeedback('abandon', message, done);
-  }
-};
-
-/**
- * The `reject` method directs the IoT Hub to delete a message
- * from the queue and record that it was rejected.
- * @param {Message}   message   The [message]{@linkcode module:common/message.Message}
- *                              to be deleted.
- * @param {Function}  done      The callback to be invoked when `reject`
- *                              completes execution.
- */
-Client.prototype.reject = function(message, done) {
-  /*Codes_SRS_NODE_DEVICE_CLIENT_05_012: [If message has a lockToken property, the reject method shall reject message via the transport associated with the Client instance.]*/
-  /*Codes_SRS_NODE_DEVICE_CLIENT_05_013: [Otherwise is shall invoke the done callback with ArgumentError.]*/
-  message = message || {};
-
-  if (!message.lockToken) {
-    done(new ArgumentError('invalid lockToken'));
-  }
-  else {
-    this._transport.sendFeedback('reject', message, done);
-  }
-};
-
-/**
- * The `complete` method directs the IoT Hub to delete a message
- * from the queue and record that it was accepted.
- * @param {Message}   message   The [message]{@linkcode module:common/message.Message}
- *                              to be accepted.
- * @param {Function}  done      The callback to be invoked when `complete`
- *                              completes execution.
- */
-Client.prototype.complete = function(message, done) {
-  /*Codes_SRS_NODE_DEVICE_CLIENT_05_014: [If message has a lockToken property, the complete method shall complete message via the transport associated with the Client instance.]*/
-  /*Codes_SRS_NODE_DEVICE_CLIENT_05_015: [Otherwise is shall invoke the done callback with ArgumentError.]*/
-  message = message || {};
-
-  if (!message.lockToken) {
-    done(new ArgumentError('invalid lockToken'));
-  }
-  else {
-    this._transport.sendFeedback('complete', message,  done);
-  }
+Client.prototype.close = function (done) {
+    /* Codes_SRS_NODE_DEVICE_CLIENT_16_001: [The close function shall call the transport’s disconnect function if it exists.] */
+    if (typeof this._transport.disconnect === 'function') {    
+        this._transport.disconnect(done);
+    }
 };
 
 module.exports = Client;
