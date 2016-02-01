@@ -29,6 +29,8 @@
 
 #include "iothub_message.h"
 
+#include "transport2.h"
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -111,6 +113,30 @@ typedef struct IOTHUB_CLIENT_CONFIG_TAG
     const char* protocolGatewayHostName;
 } IOTHUB_CLIENT_CONFIG;
 
+typedef struct IOTHUB_CLIENT_CONFIG_LESS_TAG
+{
+    /** @brief A function pointer that is passed into the @c IoTHubClientCreate.
+    *	A function definition for AMQP, @c DeviceClientProvideAmqpResources,
+    *	is defined in the include @c iothubtransportamqp.h.  A function
+    *	definition for HTTP, @c DeviceClientProvideHttpResources, is defined
+    *	in the include @c iothubtransporthttp.h */
+    IOTHUB_CLIENT_TRANSPORT_PROVIDER protocol;
+
+    /** @brief	A string that identifies the device. */
+    const char* deviceId;
+
+    /** @brief	The device key used to authenticate the device. */
+    const char* deviceKey;
+
+    /** @brief	The IoT Hub name to which the device is connecting. */
+    const char* iotHubName;
+
+    /** @brief	IoT Hub suffix goes here, e.g., private.azure-devices-int.net. */
+    const char* iotHubSuffix;
+
+    const char* protocolGatewayHostName;
+} IOTHUB_CLIENT_CONFIG_LESS;
+
 /**
  * @brief	Creates a IoT Hub client for communication with an existing
  * 			IoT Hub using the specified connection string parameter.
@@ -141,6 +167,32 @@ extern IOTHUB_CLIENT_LL_HANDLE IoTHubClient_LL_CreateFromConnectionString(const 
  * 			invoking other functions for IoT Hub client and @c NULL on failure.
  */
 extern IOTHUB_CLIENT_LL_HANDLE IoTHubClient_LL_Create(const IOTHUB_CLIENT_CONFIG* config);
+/*the above function will instantiate 1x TRANSPORT2_HANDLE  from config->protocol and then will behave as if calling IoTHubClient_LL_CreateWithTransportHandle*/
+
+
+/*this function creates a new device in the context of tht transportHandle*/
+extern IOTHUB_CLIENT_LL_HANDLE IoTHubClient_LL_CreateWithTransportHandle(const char* deviceName, const char* deviceKey, TRANSPORT2_HANDLE transportHandle);
+
+/*data flow: waitingToSend queue is encapsulated in the IOTHUBCLIENT_LL_HANDLE.*/
+/*adding two devices => there are going to be 2 such waitingToSend queues, one embedded into every handle*/
+
+/*the result of registering a device with the TRANSPORT2_HANDLE is a DEVICE_HANDLE*/
+/*the DEVICE_HANDLE is embedded too in the IOTHUBCLIENT_LL_HANDLE*/
+/*it looks like one of the parameters to create the device in the transportHandle is the list of waitingToSend*/
+
+/*the DEVICE_HANDLE represents the state of the TRANSPORT2_HANDLE for that particular device*/
+
+/*sending goes like this:
+IoTHubClient_SendEventAsync calls IoTHubClient_LL_SendEventAsync.
+IoTHubClient_LL_SendEventAsync puts the item in waitingToSend.
+
+IoTHubClient_LL_DoWork is called. IoTHubClient_LL_DoWork calls Transport_DoWork(DEVICE_HANDLE); DeviceHandle knows of the waitingToSend because it is a parameter of Transport_RegisterDevice.
+
+Receive Data:
+IoTHubClient_SetMessageCallback calls IoTHubClient_LL_SetMessageCallback. IoTHubClient_LL_SetMessageCallback calls Transport_Subscribe
+Transport_ToDork gets new data=> calls IoTHubMessage_LL_
+*/
+
 
 /**
  * @brief	Disposes of resources allocated by the IoT Hub client. This is a

@@ -16,6 +16,8 @@
 
 #include "iothub_client_ll.h"
 
+#include "transport2.h"
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -52,7 +54,15 @@ extern "C"
 	* @return	A non-NULL @c IOTHUB_CLIENT_HANDLE value that is used when
 	* 			invoking other functions for IoT Hub client and @c NULL on failure.
 	*/
+    
+    /*vanilla*/
+    /*there is going to be just one transport here, the transport is build once by using config->protocol*/
     extern IOTHUB_CLIENT_HANDLE IoTHubClient_Create(const IOTHUB_CLIENT_CONFIG* config);
+
+    /*goes and registers a new device with the transport*/
+    /*the returned handle contains everything (the device and the device key are embedded in this handle)*/
+    /*can be used with all the other APIs here*/
+    extern IOTHUB_CLIENT_HANDLE IoTHubClient_CreateWithTransportHandle(const char* device_key, const char* device_id, TRANSPORT2_HANDLE transportHandle);
 
 	/**
 	* @brief	Disposes of resources allocated by the IoT Hub client. This is a

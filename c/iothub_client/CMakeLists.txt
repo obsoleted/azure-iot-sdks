@@ -26,6 +26,7 @@ set(iothub_client_c_files
 set(iothub_client_h_files
 ./inc/iothub_client.h
 ./inc/version.h
+./inc/transport2.h
 )
 
 if(${use_http})

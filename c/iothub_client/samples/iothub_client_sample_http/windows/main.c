@@ -3,6 +3,9 @@
 
 #include "iothub_client_sample_http.h"
 
+
+#include "transport2.h"
+#include "transportclass.h"
 int main(void)
 {
     iothub_client_sample_http_run();
