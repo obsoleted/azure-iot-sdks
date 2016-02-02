@@ -9,6 +9,7 @@ option(use_amqp "set use_amqp to ON if amqp is to be used, set to OFF to not use
 option(use_uamqp "set use_uamqp to ON if uamqp is to be used, set to OFF to not use uamqp" ON)
 option(use_http "set use_http to ON if http is to be used, set to OFF to not use http" ON)
 option(use_mqtt "set use_mqtt to ON if mqtt is to be used, set to OFF to not use mqtt" ON)
+option(build_e2e_tests "set build_e2e_tests to OFF to stop building the e2e tests" ON)
 option(run_e2e_tests "set run_e2e_tests to ON to run e2e tests (default is OFF) [if possible, they are always build]" OFF)
 option(run_longhaul_tests "set run_longhaul_tests to ON to run longhaul tests (default is OFF)[if possible, they are always build]" OFF)
 option(skip_unittests "set skip_unittests to ON to skip unittests (default is OFF)[if possible, they are always build]" OFF)
